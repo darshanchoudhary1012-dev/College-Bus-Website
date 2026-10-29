@@ -1,0 +1,4 @@
+node_modules/
+data/buses.sqlite
+data/buses.sqlite-shm
+data/buses.sqlite-wal

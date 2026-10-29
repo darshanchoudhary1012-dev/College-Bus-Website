@@ -1,0 +1,12 @@
+{
+  "name": "college-bus-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "College bus route website with a Node.js and SQLite backend",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

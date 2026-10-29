@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bansal College - Bus Route Finder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>SUSHILA DEVI BANSAL COLLEGE, INDORE (MP)</h1>
+        <h3>This is a Mini Project Website</h3>
+        <h1 style="color: red; text-align: center; margin-top: 10px; font-size: 1.3rem;">
+            Note : Bus routes change daily. Please search your destination every day<br>
+            नोट: बस मार्ग रोज़ बदलते हैं। कृपया अपना गंतव्य रोज़ खोजें।
+        </h1>
+        <p style="margin-top:5px; color:#666;">Indore - Transport Department</p>
+        <div style="margin-top: 10px;">
+            <a href="admin.html" target="_blank" style="color: #003366; text-decoration: none; font-weight: bold; font-size: 0.9rem;">🔐 Admin Portal (For College Staff)</a>
+        </div>
+        <div id="studentAccountBar" style="display: none; margin-top: 12px;">
+            <span id="studentGreeting"></span>
+            <button type="button" id="studentLogoutButton" class="btn-cancel" style="margin-left: 10px;">Logout</button>
+        </div>
+    </header>
+
+    <div class="hero">
+        <img src="image.png" alt="Sushila Devi Bansal College bus">
+    </div>
+
+    <div id="studentLoginOverlay" class="auth-overlay" style="display: none;">
+        <div class="login-box" role="dialog" aria-modal="true" aria-labelledby="studentLoginTitle">
+            <h2 id="studentLoginTitle">Student Login</h2>
+            <p style="color: #666; font-size: 0.9rem; margin-top: 5px;">Log in with your college roll number to view bus routes.</p>
+            <form id="studentAuthForm">
+                <input type="text" id="studentName" placeholder="Full name" autocomplete="name" maxlength="100" style="display: none;">
+                <input type="text" id="studentRollNo" placeholder="College roll number" autocomplete="username" maxlength="40" required>
+                <input type="password" id="studentPassword" placeholder="Password (at least 8 characters)" autocomplete="current-password" minlength="8" maxlength="128" required>
+                <button type="submit" id="studentAuthSubmit">Login</button>
+            </form>
+            <p id="studentLoginError" class="auth-error" role="alert" style="display: none;"></p>
+            <p class="auth-switch">
+                <span id="studentAuthPrompt">New student?</span>
+                <button type="button" id="studentModeToggle" class="auth-link">Create an account</button>
+            </p>
+            <p class="auth-switch">
+                College staff?
+                <a class="auth-link" href="admin.html">Admin Login</a>
+            </p>
+        </div>
+    </div>
+
+    <div class="container" id="studentMainContent" style="display: none;">
+        <div class="search-area">
+            <h3>Enter Your Destination</h3>
+            <div class="search-box">
+                <input type="text" id="stopInput" placeholder="e.g. Station, Rajwada, Vijay Nagar...">
+                <button onclick="searchBuses()">Search Now</button>
+            </div>
+            <p id="errorMsg" class="error">No buses found for this stop. Please try another name.</p>
+        </div>
+
+        <div class="table-scroll">
+            <table id="busTable">
+                <thead>
+                    <tr>
+                        <th>Bus No.</th>
+                        <th>Stops in Route</th>
+                        <th>Final Destination</th>
+                        <th>Bus & Driver Info</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
