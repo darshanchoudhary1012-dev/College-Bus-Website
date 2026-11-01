@@ -8,9 +8,10 @@
     })[character]);
 }
 
-// server.js ke defaultBuses se exact data
-const busData = [
+// Server.js se default buses array
+const defaultBuses = [
     {
+        id: 1,
         no: "Bus 45",
         plate: "MP 09 AB 1234",
         driverName: "Ramesh Sharma",
@@ -19,6 +20,7 @@ const busData = [
         dest: "Bansal College Campus"
     },
     {
+        id: 2,
         no: "Bus 12",
         plate: "MP 09 CD 5678",
         driverName: "Suresh Verma",
@@ -27,6 +29,7 @@ const busData = [
         dest: "Bansal College Campus"
     },
     {
+        id: 3,
         no: "Bus 08",
         plate: "MP 09 EF 9012",
         driverName: "Vikram Singh",
@@ -35,6 +38,7 @@ const busData = [
         dest: "Bansal College Campus"
     },
     {
+        id: 4,
         no: "Bus 46",
         plate: "MP 09 GH 3456",
         driverName: "Anil Patel",
@@ -43,6 +47,15 @@ const busData = [
         dest: "Bansal College Campus"
     }
 ];
+
+function getBusesData() {
+    const saved = localStorage.getItem("busesData");
+    if (!saved) {
+        localStorage.setItem("busesData", JSON.stringify(defaultBuses));
+        return defaultBuses;
+    }
+    return JSON.parse(saved);
+}
 
 const studentLoginOverlay = document.getElementById("studentLoginOverlay");
 const studentMainContent = document.getElementById("studentMainContent");
@@ -53,61 +66,74 @@ const studentPasswordInput = document.getElementById("studentPassword");
 let studentAuthMode = "login";
 
 function showStudent(student) {
-    studentLoginOverlay.style.display = "none";
-    studentMainContent.style.display = "block";
-    document.getElementById("studentGreeting").textContent = `Logged in as ${student.name}`;
-    document.getElementById("studentAccountBar").style.display = "block";
+    if (studentLoginOverlay) studentLoginOverlay.style.display = "none";
+    if (studentMainContent) studentMainContent.style.display = "block";
+    const greeting = document.getElementById("studentGreeting");
+    if (greeting) greeting.textContent = `Logged in as ${student.name}`;
+    const accountBar = document.getElementById("studentAccountBar");
+    if (accountBar) accountBar.style.display = "block";
 }
 
 function showStudentLogin(message = "") {
-    studentMainContent.style.display = "none";
-    document.getElementById("studentAccountBar").style.display = "none";
-    studentLoginOverlay.style.display = "flex";
-    studentLoginError.textContent = message;
-    studentLoginError.style.display = message ? "block" : "none";
+    if (studentMainContent) studentMainContent.style.display = "none";
+    const accountBar = document.getElementById("studentAccountBar");
+    if (accountBar) accountBar.style.display = "none";
+    if (studentLoginOverlay) studentLoginOverlay.style.display = "flex";
+    if (studentLoginError) {
+        studentLoginError.textContent = message;
+        studentLoginError.style.display = message ? "block" : "none";
+    }
 }
 
 function setStudentAuthMode(mode) {
     studentAuthMode = mode;
     const isRegistering = mode === "register";
-    document.getElementById("studentLoginTitle").textContent = isRegistering ? "Create Student Account" : "Student Login";
-    document.getElementById("studentAuthSubmit").textContent = isRegistering ? "Create Account" : "Login";
-    document.getElementById("studentAuthPrompt").textContent = isRegistering ? "Already registered?" : "New student?";
-    document.getElementById("studentModeToggle").textContent = isRegistering ? "Login" : "Create an account";
-    studentNameInput.style.display = isRegistering ? "block" : "none";
-    studentNameInput.required = isRegistering;
-    studentPasswordInput.autocomplete = isRegistering ? "new-password" : "current-password";
-    studentLoginError.style.display = "none";
-    studentLoginError.textContent = "";
+    const title = document.getElementById("studentLoginTitle");
+    if (title) title.textContent = isRegistering ? "Create Student Account" : "Student Login";
+    const submitBtn = document.getElementById("studentAuthSubmit");
+    if (submitBtn) submitBtn.textContent = isRegistering ? "Create Account" : "Login";
+    const prompt = document.getElementById("studentAuthPrompt");
+    if (prompt) prompt.textContent = isRegistering ? "Already registered?" : "New student?";
+    const toggleBtn = document.getElementById("studentModeToggle");
+    if (toggleBtn) toggleBtn.textContent = isRegistering ? "Login" : "Create an account";
+    
+    if (studentNameInput) {
+        studentNameInput.style.display = isRegistering ? "block" : "none";
+        studentNameInput.required = isRegistering;
+    }
+    if (studentPasswordInput) {
+        studentPasswordInput.autocomplete = isRegistering ? "new-password" : "current-password";
+    }
+    if (studentLoginError) {
+        studentLoginError.style.display = "none";
+        studentLoginError.textContent = "";
+    }
 }
 
 function submitStudentAuth(event) {
     event.preventDefault();
-    studentLoginError.style.display = "none";
+    if (studentLoginError) studentLoginError.style.display = "none";
 
     const isRegistering = studentAuthMode === "register";
     const rollNo = document.getElementById("studentRollNo").value.trim().toUpperCase();
     const password = studentPasswordInput.value;
-    const name = studentNameInput.value.trim();
+    const name = studentNameInput ? studentNameInput.value.trim() : "";
 
     let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
 
     if (isRegistering) {
         if (!name || name.length > 100) {
-            studentLoginError.textContent = "Enter your name (up to 100 characters).";
-            studentLoginError.style.display = "block";
+            showStudentLogin("Enter your name (up to 100 characters).");
             return;
         }
         if (password.length < 8 || password.length > 128) {
-            studentLoginError.textContent = "Password must be between 8 and 128 characters.";
-            studentLoginError.style.display = "block";
+            showStudentLogin("Password must be between 8 and 128 characters.");
             return;
         }
 
         const exists = registeredUsers.some(u => u.rollNo === rollNo);
         if (exists) {
-            studentLoginError.textContent = "An account with this roll number already exists. Please log in.";
-            studentLoginError.style.display = "block";
+            showStudentLogin("An account with this roll number already exists. Please log in.");
             return;
         }
 
@@ -116,24 +142,23 @@ function submitStudentAuth(event) {
         localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
         localStorage.setItem("currentStudent", JSON.stringify(newStudent));
 
-        studentAuthForm.reset();
+        if (studentAuthForm) studentAuthForm.reset();
         setStudentAuthMode("login");
         showStudent(newStudent);
     } else {
         let foundUser = registeredUsers.find(u => u.rollNo === rollNo && u.password === password);
 
-        // Backup Demo User
+        // Demo User
         if (!foundUser && rollNo === "12345" && password === "12345678") {
             foundUser = { rollNo: "12345", name: "Demo Student" };
         }
 
         if (foundUser) {
             localStorage.setItem("currentStudent", JSON.stringify(foundUser));
-            studentAuthForm.reset();
+            if (studentAuthForm) studentAuthForm.reset();
             showStudent(foundUser);
         } else {
-            studentLoginError.textContent = "Invalid roll number or password.";
-            studentLoginError.style.display = "block";
+            showStudentLogin("Invalid roll number or password.");
         }
     }
 }
@@ -144,6 +169,8 @@ function searchBuses() {
     const table = document.getElementById("busTable");
     const error = document.getElementById("errorMsg");
 
+    if (!tbody || !table || !error) return;
+
     tbody.innerHTML = "";
     error.style.display = "none";
     table.style.display = "none";
@@ -153,7 +180,8 @@ function searchBuses() {
         return;
     }
 
-    const matchingBuses = busData.filter(bus =>
+    const buses = getBusesData();
+    const matchingBuses = buses.filter(bus =>
         bus.stops.some(stop => stop.toLowerCase().includes(input))
     );
 
@@ -196,25 +224,26 @@ function searchBuses() {
 
 function toggleDetails(index) {
     const detailsRow = document.getElementById(`details-${index}`);
-    detailsRow.style.display = detailsRow.style.display === "none" ? "table-row" : "none";
+    if (detailsRow) {
+        detailsRow.style.display = detailsRow.style.display === "none" ? "table-row" : "none";
+    }
 }
 
-document.getElementById("stopInput").addEventListener("keydown", event => {
+document.getElementById("stopInput")?.addEventListener("keydown", event => {
     if (event.key === "Enter") searchBuses();
 });
 
-studentAuthForm.addEventListener("submit", submitStudentAuth);
+if (studentAuthForm) studentAuthForm.addEventListener("submit", submitStudentAuth);
 
-document.getElementById("studentModeToggle").addEventListener("click", () => {
+document.getElementById("studentModeToggle")?.addEventListener("click", () => {
     setStudentAuthMode(studentAuthMode === "login" ? "register" : "login");
 });
 
-document.getElementById("studentLogoutButton").addEventListener("click", () => {
+document.getElementById("studentLogoutButton")?.addEventListener("click", () => {
     localStorage.removeItem("currentStudent");
     showStudentLogin("Logged out successfully.");
 });
 
-// Auto Check session
 const currentStudent = JSON.parse(localStorage.getItem("currentStudent"));
 if (currentStudent) {
     showStudent(currentStudent);
