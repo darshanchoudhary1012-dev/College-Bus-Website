@@ -13,8 +13,8 @@ const defaultBuses = [
         id: 1,
         no: "Bus 45",
         plate: "MP 09 AB 1234",
-        driverName: "Ramesh Sharma",
-        driverContact: "+91 98765 43210",
+        driverName: "Mr.Ramesh Sharma",
+        driverContact: "+91 98765 XXXXX",
         stops: ["Vijay Nagar", "Bapat Square", "Radisson", "College", "Rajwada"],
         dest: "Bansal College Campus"
     },
@@ -22,8 +22,8 @@ const defaultBuses = [
         id: 2,
         no: "Bus 12",
         plate: "MP 09 CD 5678",
-        driverName: "Suresh Verma",
-        driverContact: "+91 98765 12345",
+        driverName: "Mr.Suresh Verma",
+        driverContact: "+91 98765 XXXXX",
         stops: ["Station", "Rajwada", "Mhow Naka", "College"],
         dest: "Bansal College Campus"
     },
@@ -31,8 +31,8 @@ const defaultBuses = [
         id: 3,
         no: "Bus 08",
         plate: "MP 09 EF 9012",
-        driverName: "Vikram Singh",
-        driverContact: "+91 98765 67890",
+        driverName: "Mr.Vikram Singh",
+        driverContact: "+91 98765 XXXXX",
         stops: ["Bhawarkua", "Tower Square", "Sapna Sangeeta", "College"],
         dest: "Bansal College Campus"
     },
@@ -40,8 +40,8 @@ const defaultBuses = [
         id: 4,
         no: "Bus 46",
         plate: "MP 09 GH 3456",
-        driverName: "Anil Patel",
-        driverContact: "+91 98765 98765",
+        driverName: "Mr.Anil Patel",
+        driverContact: "+91 98765 XXXXX",
         stops: ["Hawa Bangla", "Cat Road", "Rau Rangwasa", "Ranjit Hanuman", "60 Fit Footi kothi"],
         dest: "Bansal College Campus"
     }
