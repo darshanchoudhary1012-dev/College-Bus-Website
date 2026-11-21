@@ -6,6 +6,7 @@ const busForm = document.getElementById("addBusForm");
 const formTitle = document.getElementById("formTitle");
 const cancelEditButton = document.getElementById("cancelEditButton");
 const submitButton = busForm.querySelector('button[type="submit"]');
+const studentTableBody = document.getElementById("studentTableBody");
 let editingBusId = null;
 
 function escapeHtml(value) {
@@ -48,7 +49,7 @@ async function verifyPassword() {
             body: JSON.stringify({ password: document.getElementById("adminPasswordInput").value })
         });
         showAdmin();
-        await loadAdminBuses();
+        await Promise.all([loadAdminBuses(), loadAdminStudents()]);
     } catch (error) {
         loginError.textContent = error.message;
         loginError.style.display = "block";
@@ -71,6 +72,7 @@ async function loadAdminBuses() {
             adminTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666;">No buses found. Add one using the form above.</td></tr>';
             return;
         }
+
         adminTableBody.innerHTML = buses.map(bus => `
             <tr>
                 <td><strong>${escapeHtml(bus.no)}</strong></td>
@@ -86,6 +88,62 @@ async function loadAdminBuses() {
         `).join("");
     } catch (error) {
         adminTableBody.innerHTML = `<tr><td colspan="6" style="color: #dc3545;">${escapeHtml(error.message)}</td></tr>`;
+    }
+}
+
+async function loadAdminStudents() {
+    try {
+        const students = await apiRequest("/api/admin/students");
+        if (students.length === 0) {
+            studentTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666;">No students are registered yet.</td></tr>';
+            return;
+        }
+        studentTableBody.innerHTML = students.map(student => `
+            <tr>
+                <td><strong>${escapeHtml(student.name)}</strong></td>
+                <td><code>${escapeHtml(student.roll_no)}</code></td>
+                <td>${escapeHtml(student.created_at || "N/A")}</td>
+                <td class="admin-actions">
+                    <button class="btn-edit" data-edit-student-id="${student.id}" data-student-name="${escapeHtml(student.name)}" data-student-roll="${escapeHtml(student.roll_no)}">Edit</button>
+                    <button class="btn-delete" data-delete-student-id="${student.id}">Delete</button>
+                </td>
+            </tr>
+        `).join("");
+    } catch (error) {
+        studentTableBody.innerHTML = `<tr><td colspan="4" style="color: #dc3545;">${escapeHtml(error.message)}</td></tr>`;
+    }
+}
+
+async function editStudent(id, name, rollNo) {
+    const newName = prompt("Student name:", name);
+    if (newName === null) return;
+    const newRollNo = prompt("College roll number:", rollNo);
+    if (newRollNo === null) return;
+    const newPassword = prompt("Enter a new password (leave blank to keep the current password):");
+    if (newPassword === null) return;
+
+    try {
+        await apiRequest(`/api/admin/students/${id}`, {
+            method: "PUT",
+            body: JSON.stringify({
+                name: newName.trim(),
+                rollNo: newRollNo.trim(),
+                password: newPassword
+            })
+        });
+        await loadAdminStudents();
+    } catch (error) {
+        alert(`Could not update student: ${error.message}`);
+    }
+}
+
+async function deleteStudent(id) {
+    if (!confirm("Delete this student account? This action cannot be undone.")) return;
+    try {
+        await apiRequest(`/api/admin/students/${id}`, { method: "DELETE" });
+        await loadAdminStudents();
+    } catch (error) {
+        alert(`Could not delete student: ${error.message}`);
     }
 }
 
@@ -169,6 +227,19 @@ cancelEditButton.addEventListener("click", resetBusForm);
 document.getElementById("adminPasswordInput").addEventListener("keydown", event => {
     if (event.key === "Enter") verifyPassword();
 });
+studentTableBody.addEventListener("click", event => {
+    const editButton = event.target.closest("[data-edit-student-id]");
+    if (editButton) {
+        editStudent(
+            Number(editButton.dataset.editStudentId),
+            editButton.dataset.studentName,
+            editButton.dataset.studentRoll
+        );
+        return;
+    }
+    const deleteButton = event.target.closest("[data-delete-student-id]");
+    if (deleteButton) deleteStudent(Number(deleteButton.dataset.deleteStudentId));
+});
 adminTableBody.addEventListener("click", event => {
     const editButton = event.target.closest("[data-edit-bus-id]");
     if (editButton) {
@@ -182,7 +253,7 @@ adminTableBody.addEventListener("click", event => {
 apiRequest("/api/admin/session")
     .then(() => {
         showAdmin();
-        return loadAdminBuses();
+        return Promise.all([loadAdminBuses(), loadAdminStudents()]);
     })
     .catch(error => {
         loginOverlay.style.display = "flex";

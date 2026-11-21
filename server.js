@@ -360,6 +360,80 @@ const server = http.createServer(async (request, response) => {
             return;
         }
 
+        if (pathname === "/api/admin/students" && request.method === "GET") {
+            if (!requireAdmin(request, response)) return;
+            const students = database.prepare(
+                "SELECT id, name, roll_no, created_at FROM students ORDER BY created_at DESC, id DESC"
+            ).all();
+            sendJson(response, 200, students);
+            return;
+        }
+
+        const studentMatch = pathname.match(/^\/api\/admin\/students\/(\d+)$/);
+        if (studentMatch && request.method === "PUT") {
+            if (!requireAdmin(request, response)) return;
+            const body = await readJson(request);
+            const name = typeof body.name === "string" ? body.name.trim() : "";
+            const rollNo = typeof body.rollNo === "string" ? body.rollNo.trim().toUpperCase() : "";
+            const password = typeof body.password === "string" ? body.password : "";
+            if (!name || name.length > 100) {
+                sendJson(response, 400, { error: "Enter a valid student name (up to 100 characters)." });
+                return;
+            }
+            if (!rollNo || rollNo.length > 40) {
+                sendJson(response, 400, { error: "Enter a valid college roll number (up to 40 characters)." });
+                return;
+            }
+            if (password && (password.length < 8 || password.length > 128)) {
+                sendJson(response, 400, { error: "Password must be between 8 and 128 characters." });
+                return;
+            }
+            const studentId = Number(studentMatch[1]);
+            const existing = database.prepare("SELECT id FROM students WHERE id = ?").get(studentId);
+            if (!existing) {
+                sendJson(response, 404, { error: "Student not found." });
+                return;
+            }
+            const duplicate = database.prepare("SELECT id FROM students WHERE roll_no = ? AND id != ?").get(rollNo, studentId);
+            if (duplicate) {
+                sendJson(response, 409, { error: "Another student already uses this roll number." });
+                return;
+            }
+            if (password) {
+                const salt = crypto.randomBytes(16).toString("hex");
+                const passwordHash = crypto.scryptSync(password, salt, 64).toString("hex");
+                database.prepare(
+                    "UPDATE students SET name = ?, roll_no = ?, password_salt = ?, password_hash = ? WHERE id = ?"
+                ).run(name, rollNo, salt, passwordHash, studentId);
+            } else {
+                database.prepare("UPDATE students SET name = ?, roll_no = ? WHERE id = ?")
+                    .run(name, rollNo, studentId);
+            }
+            for (const [token, session] of studentSessions.entries()) {
+                if (session.id === studentId) studentSessions.delete(token);
+            }
+            const updated = database.prepare(
+                "SELECT id, name, roll_no, created_at FROM students WHERE id = ?"
+            ).get(studentId);
+            sendJson(response, 200, updated);
+            return;
+        }
+
+        if (studentMatch && request.method === "DELETE") {
+            if (!requireAdmin(request, response)) return;
+            const studentId = Number(studentMatch[1]);
+            const result = database.prepare("DELETE FROM students WHERE id = ?").run(studentId);
+            if (result.changes === 0) {
+                sendJson(response, 404, { error: "Student not found." });
+                return;
+            }
+            for (const [token, session] of studentSessions.entries()) {
+                if (session.id === studentId) studentSessions.delete(token);
+            }
+            sendJson(response, 200, { deleted: true });
+            return;
+        }
+
         if (pathname === "/api/buses" && request.method === "POST") {
             if (!requireAdmin(request, response)) return;
             const bus = await readJson(request);
